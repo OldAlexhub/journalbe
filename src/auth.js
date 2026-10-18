@@ -1,4 +1,4 @@
-import {randomUUID} from 'node:crypto';
+import {randomUUID, timingSafeEqual} from 'node:crypto';
 import {sha256, secureHexEqual, pool} from './db.js';
 
 export async function installationAuth(req, res, next) {
@@ -30,8 +30,19 @@ export function csrfToken(req) {
   return req.session.csrfToken;
 }
 
-export function requireCsrf(req, res, next) {
+export function rotateCsrfToken(req) {
+  req.session.csrfToken = randomUUID().replaceAll('-', '');
+  return req.session.csrfToken;
+}
+
+export function hasValidCsrf(req) {
   const supplied = req.body?._csrf || req.get('x-csrf-token');
-  if (!supplied || supplied !== req.session?.csrfToken) return res.status(403).send('Invalid CSRF token');
+  const expected = req.session?.csrfToken;
+  if (typeof supplied !== 'string' || typeof expected !== 'string' || supplied.length !== expected.length) return false;
+  return timingSafeEqual(Buffer.from(supplied, 'utf8'), Buffer.from(expected, 'utf8'));
+}
+
+export function requireCsrf(req, res, next) {
+  if (!hasValidCsrf(req)) return res.status(403).send('This form has expired. Refresh the page and try again.');
   next();
 }

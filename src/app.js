@@ -13,7 +13,7 @@ import {fixedWindowRateLimit} from './rate-limit.js';
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const PgSession = connectPgSimple(session);
 
-export function createApp({queue, worker, startedAt = Date.now()}) {
+export function createApp({queue, worker, startedAt = Date.now(), sessionStore} = {}) {
   const app = express();
   if (config.trustProxyHops > 0) app.set('trust proxy', config.trustProxyHops);
   app.disable('x-powered-by');
@@ -23,6 +23,7 @@ export function createApp({queue, worker, startedAt = Date.now()}) {
   app.use('/admin-assets', express.static(path.join(root, 'public'), {dotfiles: 'deny', index: false, maxAge: config.env === 'production' ? '1h' : 0}));
 
   app.get(['/health', '/healthz'], (_req, res) => res.status(200).type('text/plain').send('ok'));
+  app.get('/', (_req, res) => res.redirect('/admin/login'));
   app.get('/ready', async (_req, res) => {
     const database = await checkDatabase();
     const status = {ready: database.ready && worker.ready, express: true, database, textWorker: worker.status()};
@@ -43,13 +44,17 @@ export function createApp({queue, worker, startedAt = Date.now()}) {
 
   app.use(session({
     name: 'innerfolio.admin',
-    store: new PgSession({pool, tableName: 'session', createTableIfMissing: true, pruneSessionInterval: 60}),
+    store: sessionStore || new PgSession({pool, tableName: 'session', createTableIfMissing: true, pruneSessionInterval: 60}),
     secret: config.sessionSecret || 'development-only-session-secret-change-me',
     resave: false,
     saveUninitialized: false,
     rolling: true,
-    cookie: {httpOnly: true, secure: config.env === 'production', sameSite: 'lax', maxAge: 30 * 60 * 1000},
+    cookie: {httpOnly: true, secure: 'auto', sameSite: 'lax', maxAge: 30 * 60 * 1000},
   }));
+  app.use('/admin', (_req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+  });
   app.use('/admin', adminRouter(queue, worker, startedAt));
 
   app.use((req, res) => {

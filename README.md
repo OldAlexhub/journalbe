@@ -25,9 +25,10 @@ Use `ADMIN_RESET_PASSWORD` with `npm run admin:reset-password` only from local s
 - `DELETE /api/v1/analysis/jobs/:id`: scoped cancel/discard.
 - `DELETE /api/v1/installation-data`: revoke the credential and delete operational records.
 - `GET /api/v1/capabilities`: language/features and non-generative boundary.
+- `GET /`: redirects to the administrator sign-in page.
 - `/admin/login` and `/admin`: protected operational portal.
 
-Admin sessions use PostgreSQL storage, Secure/HttpOnly/SameSite=Lax cookies in production, rolling 30-minute expiry, rotation on login, CSRF tokens for changes, Argon2id password hashes, login throttling, and a per-user session version. The portal shows only operational identifiers, timings, health, status, and redacted codes.
+Admin sessions use PostgreSQL storage, request-aware Secure cookies behind the configured trusted proxy, HttpOnly/SameSite=Lax protection, rolling 30-minute expiry, rotation on login, CSRF tokens for changes, Argon2id password hashes, login throttling, and a per-user session version. Admin pages are never cached, and an expired sign-in form returns a fresh form instead of trapping the operator on an error response. The portal shows only operational identifiers, timings, health, status, and redacted codes.
 
 ## Process behavior
 

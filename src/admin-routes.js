@@ -2,7 +2,7 @@ import {Router} from 'express';
 import argon2 from 'argon2';
 import {randomUUID} from 'node:crypto';
 import {pool, audit, checkDatabase} from './db.js';
-import {requireAdmin, requireCsrf, csrfToken} from './auth.js';
+import {requireAdmin, requireCsrf, csrfToken, hasValidCsrf, rotateCsrfToken} from './auth.js';
 import {config} from './config.js';
 import {fixedWindowRateLimit} from './rate-limit.js';
 
@@ -21,7 +21,14 @@ export function adminRouter(queue, worker, startedAt) {
     res.render('login', {title: 'Admin sign in', error: null});
   });
 
-  router.post('/login', loginLimiter, requireCsrf, async (req, res, next) => {
+  router.post('/login', loginLimiter, (req, res, next) => {
+    if (hasValidCsrf(req)) return next();
+    rotateCsrfToken(req);
+    return res.status(403).render('login', {
+      title: 'Admin sign in',
+      error: 'Your sign-in page expired. Please try again.',
+    });
+  }, async (req, res, next) => {
     try {
       const username = String(req.body.username || '').slice(0, 80);
       const password = String(req.body.password || '');
