@@ -1,0 +1,33 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "Text-only operational API and private admin portal for Innerfolio",
+  "license": "UNLICENSED",
+  "private": true,
+  "author": "Old Alex Hub",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "db:migrate": "node scripts/migrate.js",
+    "admin:seed": "node scripts/seed-admin.js",
+    "admin:reset-password": "node scripts/reset-admin-password.js",
+    "test": "node --test test/*.test.js",
+    "worker:test": "python worker/evaluate.py"
+  },
+  "dependencies": {
+    "argon2": "^0.45.1",
+    "connect-pg-simple": "^10.0.0",
+    "dotenv": "^17.2.3",
+    "ejs": "^3.1.10",
+    "express": "^5.3.0",
+    "express-session": "^1.19.0",
+    "helmet": "^8.3.0",
+    "pg": "^8.23.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "supertest": "^7.1.4"
+  }
+}
