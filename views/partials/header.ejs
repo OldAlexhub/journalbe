@@ -1,2 +1,41 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title><%= title %> · Innerfolio Admin</title><link rel="stylesheet" href="/admin-assets/admin.css"></head><body>
-<header><a class="brand" href="/admin">Innerfolio <span>Operations</span></a><% if (typeof adminUsername !== 'undefined') { %><nav><a href="/admin">Dashboard</a><a href="/admin/jobs">Jobs</a><a href="/admin/worker">Worker</a><a href="/admin/installations">Installations</a><a href="/admin/settings">Settings</a><a href="/admin/audit">Audit</a><a href="/admin/security">Security</a><form method="post" action="/admin/logout"><input type="hidden" name="_csrf" value="<%= csrf() %>"><button class="link">Log out</button></form></nav><% } %></header><main>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title><%= title %> · Innerfolio Admin</title>
+  <link rel="stylesheet" href="/admin-assets/admin.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-shell">
+      <div class="header-primary">
+        <a class="brand" href="/admin" aria-label="Innerfolio operations dashboard">
+          <span class="brand-mark" aria-hidden="true">I</span>
+          <span>Innerfolio <small>Operations</small></span>
+        </a>
+        <% if (typeof adminUsername !== 'undefined') { %>
+          <div class="session-controls">
+            <span class="session-user"><small>Signed in as</small><strong><%= adminUsername %></strong></span>
+            <form class="nav-logout" method="post" action="/admin/logout">
+              <input type="hidden" name="_csrf" value="<%= csrf() %>">
+              <button class="logout-button" type="submit">Log out</button>
+            </form>
+          </div>
+        <% } %>
+      </div>
+      <% if (typeof adminUsername !== 'undefined') { %>
+        <nav class="admin-nav" aria-label="Administration">
+          <a class="<%= currentPath === '/' ? 'active' : '' %>" href="/admin" <% if (currentPath === '/') { %>aria-current="page"<% } %>>Dashboard</a>
+          <a class="<%= currentPath.startsWith('/jobs') ? 'active' : '' %>" href="/admin/jobs" <% if (currentPath.startsWith('/jobs')) { %>aria-current="page"<% } %>>Jobs</a>
+          <a class="<%= currentPath.startsWith('/worker') ? 'active' : '' %>" href="/admin/worker" <% if (currentPath.startsWith('/worker')) { %>aria-current="page"<% } %>>Text worker</a>
+          <a class="<%= currentPath.startsWith('/installations') ? 'active' : '' %>" href="/admin/installations" <% if (currentPath.startsWith('/installations')) { %>aria-current="page"<% } %>>Installations</a>
+          <a class="<%= currentPath.startsWith('/settings') ? 'active' : '' %>" href="/admin/settings" <% if (currentPath.startsWith('/settings')) { %>aria-current="page"<% } %>>Settings</a>
+          <a class="<%= currentPath.startsWith('/audit') ? 'active' : '' %>" href="/admin/audit" <% if (currentPath.startsWith('/audit')) { %>aria-current="page"<% } %>>Audit</a>
+          <a class="<%= currentPath.startsWith('/security') ? 'active' : '' %>" href="/admin/security" <% if (currentPath.startsWith('/security')) { %>aria-current="page"<% } %>>Security</a>
+        </nav>
+      <% } %>
+    </div>
+  </header>
+  <main>
