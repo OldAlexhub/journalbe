@@ -2,6 +2,7 @@ import {readFile, readdir} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {pool} from '../src/db.js';
+import {provisionInitialAdministrator} from '../src/admin-provisioning.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const migrationDir = path.join(here, '..', 'migrations');
@@ -26,6 +27,10 @@ try {
       client.release();
     }
   }
+  const administrator = await provisionInitialAdministrator(pool);
+  console.log(administrator.created
+    ? 'Initial administrator created with an Argon2id password hash.'
+    : 'Administrator already exists; deployment made no credential changes.');
 } finally {
   await pool.end();
 }

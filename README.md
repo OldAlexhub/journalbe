@@ -5,10 +5,10 @@ This deployable Node.js service is the only public backend for Innerfolio. It ac
 ## Windows setup
 
 1. Install Node.js 22+, Python 3.11/3.12, and PostgreSQL 16+.
-2. Create a private database and role, then copy `.env.example` values into the existing private `.env`. Never commit `.env`.
-3. Run `npm ci` and `npm run db:migrate`.
+2. Create a private database and role, then copy `.env.example` values into the existing private `.env`. Before the first setup, set `ADMIN_USERNAME` and a 12+ character `ADMIN_INITIAL_PASSWORD`. Never commit `.env`.
+3. Run `npm ci` and `npm run db:migrate`. This applies migrations and, only when no administrator exists, creates the initial account with an Argon2id password hash. Later deployments never change that account.
 4. Run `powershell -ExecutionPolicy Bypass -File worker/install.ps1`. This creates `.venv`, installs pinned CPU dependencies, downloads `en_core_web_sm`, and rejects a transformer pipeline.
-5. Set `ADMIN_USERNAME` and `ADMIN_INITIAL_PASSWORD` in the private process environment for the one-time provisioning command, then run `npm run admin:seed`. The command is idempotent and never resets an existing administrator. Remove the initial password environment value afterward.
+5. Remove `ADMIN_INITIAL_PASSWORD` from the environment after the first successful setup. `npm run admin:seed` remains available as an equivalent one-time recovery for an empty administrator table; it also refuses to overwrite an existing account.
 6. Run `npm test`, `npm run worker:test`, and `npm start`.
 
 Use `ADMIN_RESET_PASSWORD` with `npm run admin:reset-password` only from local server access for recovery. The command changes the hash and invalidates sessions. Never put real passwords in command history, documentation, screenshots, or release artifacts.
