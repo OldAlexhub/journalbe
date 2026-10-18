@@ -6,6 +6,7 @@ import {readFile} from 'node:fs/promises';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {createApp} from '../src/app.js';
+import {config} from '../src/config.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -15,6 +16,7 @@ const app=createApp({queue,worker,sessionStore:new session.MemoryStore()});
 
 test('health is minimal liveness',async()=>{const response=await request(app).get('/health');assert.equal(response.status,200);assert.equal(response.text,'ok');});
 test('base URL redirects directly to admin sign in',async()=>{const response=await request(app).get('/');assert.equal(response.status,302);assert.equal(response.headers.location,'/admin/login');});
+test('public origin is pinned to the canonical journal server',()=>{assert.equal(config.publicBaseUrl,'https://journal.server.oldalexhub.com');});
 test('capabilities disclose text-only non-generative processing',async()=>{const response=await request(app).get('/api/v1/capabilities');assert.equal(response.status,200);assert.equal(response.body.textOnly,true);assert.equal(response.body.audioAccepted,false);assert.equal(response.body.generativeModels,false);});
 test('published privacy copy matches default-on journal insights',async()=>{const response=await request(app).get('/privacy');assert.equal(response.status,200);assert.match(response.text,/enabled by default/);assert.doesNotMatch(response.text,/must be supplied|opt in and choose/i);});
 test('multipart and audio uploads are rejected before routing',async()=>{const response=await request(app).post('/api/v1/analysis/jobs').attach('audio',Buffer.from([0,1,2]),'voice.wav');assert.equal(response.status,415);assert.equal(response.body.error.code,'JSON_ONLY');});

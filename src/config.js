@@ -29,7 +29,7 @@ export const config = Object.freeze({
   env: process.env.NODE_ENV || 'development',
   host: process.env.HOST || '127.0.0.1',
   port: integer('PORT', 8787, 1, 65535),
-  publicBaseUrl: process.env.PUBLIC_BASE_URL || 'https://jorunal.server.oldalexhub.com',
+  publicBaseUrl: 'https://journal.server.oldalexhub.com',
   databaseUrl: databaseConfig.databaseUrl,
   databaseSsl: databaseConfig.databaseSsl,
   pythonBin: configuredPythonPath && existsSync(configuredPythonPath) ? configuredPythonPath : defaultPython,
