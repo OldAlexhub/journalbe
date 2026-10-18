@@ -10,6 +10,15 @@ const startedAt = Date.now();
 const worker = new WorkerClient();
 const queue = new JobQueue(worker);
 worker.start();
+try {
+  await worker.waitUntilReady();
+  console.log(JSON.stringify({event: 'text_worker_ready', model: worker.status().model?.name}));
+} catch (error) {
+  console.error(JSON.stringify({event: 'text_worker_startup_failed', code: error.code || 'WORKER_STARTUP_FAILED'}));
+  worker.stop();
+  await pool.end();
+  throw error;
+}
 
 await pool.query(`UPDATE analysis_jobs SET status='interrupted',error_code='SERVER_RESTART',completed_at=now() WHERE status IN ('queued','processing')`).catch(error => {
   console.error(JSON.stringify({event: 'startup_database_unavailable', code: error.code || 'unknown'}));

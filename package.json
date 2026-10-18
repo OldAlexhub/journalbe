@@ -8,13 +8,16 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
+    "postinstall": "node scripts/prepare-worker.js",
+    "prestart": "node scripts/prepare-worker.js",
     "start": "node server.js",
     "dev": "node --watch server.js",
     "db:migrate": "node scripts/migrate.js",
     "admin:seed": "node scripts/seed-admin.js",
     "admin:reset-password": "node scripts/reset-admin-password.js",
+    "worker:prepare": "node scripts/prepare-worker.js",
     "test": "node --test test/*.test.js",
-    "worker:test": "python worker/evaluate.py"
+    "worker:test": "node scripts/evaluate-worker.js"
   },
   "dependencies": {
     "argon2": "^0.45.1",

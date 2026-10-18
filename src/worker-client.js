@@ -13,6 +13,7 @@ export class WorkerClient {
     this.ready = false;
     this.model = null;
     this.pending = new Map();
+    this.readyWaiters = new Set();
     this.restarts = 0;
     this.stopping = false;
     this.stats = {completed: 0, failed: 0, totalDurationMs: 0};
@@ -42,6 +43,11 @@ export class WorkerClient {
       this.ready = true;
       this.model = {name: message.model, version: message.version, pipes: message.pipes};
       this.restarts = 0;
+      for (const waiter of this.readyWaiters) {
+        clearTimeout(waiter.timer);
+        waiter.resolve(this.model);
+      }
+      this.readyWaiters.clear();
       return;
     }
     const pending = this.pending.get(message.requestId);
@@ -94,6 +100,18 @@ export class WorkerClient {
     });
   }
 
+  waitUntilReady(timeoutMs = config.workerStartupTimeoutMs) {
+    if (this.ready && this.model) return Promise.resolve(this.model);
+    return new Promise((resolve, reject) => {
+      const waiter = {resolve, reject, timer: null};
+      waiter.timer = setTimeout(() => {
+        this.readyWaiters.delete(waiter);
+        reject(Object.assign(new Error('Text model did not load before startup timeout'), {code: 'WORKER_STARTUP_TIMEOUT'}));
+      }, timeoutMs);
+      this.readyWaiters.add(waiter);
+    });
+  }
+
   status() {
     return {
       ready: this.ready,
@@ -108,5 +126,10 @@ export class WorkerClient {
   stop() {
     this.stopping = true;
     this.process?.kill();
+    for (const waiter of this.readyWaiters) {
+      clearTimeout(waiter.timer);
+      waiter.reject(Object.assign(new Error('Text worker stopped'), {code: 'WORKER_STOPPED'}));
+    }
+    this.readyWaiters.clear();
   }
 }

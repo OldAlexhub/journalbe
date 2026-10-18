@@ -1,5 +1,20 @@
 import 'dotenv/config';
+import {existsSync} from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {databaseConfig} from './database-config.js';
+
+const serverRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const configuredPython = String(process.env.PYTHON_BIN || '').trim();
+const configuredPythonPath = configuredPython
+  ? (path.isAbsolute(configuredPython) ? configuredPython : path.resolve(serverRoot, configuredPython))
+  : '';
+const defaultPython = path.join(
+  serverRoot,
+  '.venv',
+  process.platform === 'win32' ? 'Scripts' : 'bin',
+  process.platform === 'win32' ? 'python.exe' : 'python',
+);
 
 const integer = (name, fallback, min, max) => {
   const raw = process.env[name];
@@ -17,8 +32,9 @@ export const config = Object.freeze({
   publicBaseUrl: process.env.PUBLIC_BASE_URL || 'https://jorunal.server.oldalexhub.com',
   databaseUrl: databaseConfig.databaseUrl,
   databaseSsl: databaseConfig.databaseSsl,
-  pythonBin: process.env.PYTHON_BIN || (process.platform === 'win32' ? '.venv\\Scripts\\python.exe' : '.venv/bin/python'),
+  pythonBin: configuredPythonPath && existsSync(configuredPythonPath) ? configuredPythonPath : defaultPython,
   nlpModel: process.env.NLP_MODEL || 'en_core_web_sm',
+  workerStartupTimeoutMs: integer('WORKER_STARTUP_TIMEOUT_MS', 120000, 5000, 300000),
   queueMax: integer('QUEUE_MAX', 24, 1, 1000),
   workerConcurrency: integer('WORKER_CONCURRENCY', 1, 1, 4),
   jobTimeoutMs: integer('JOB_TIMEOUT_MS', 45000, 1000, 300000),
